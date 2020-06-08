@@ -56,8 +56,6 @@ while true
         else
             set slept (math "$slept + 1")
         end
-
-        echo $slept
     end
 
     # Outside working hours we don't enforce breaks, as I'm moving around
