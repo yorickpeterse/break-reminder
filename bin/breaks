@@ -3,6 +3,9 @@
 # The time allowed spent working, in seconds.
 set work_time (math '20 * 60')
 
+# The amount of one minute sleep intervals in a work cycle.
+set sleep_intervals (math "$work_time / 60")
+
 # The number of short breaks in an hour, after which a long break should be
 # enforced.
 set short_break_count (math "3600 / $work_time")
@@ -42,12 +45,20 @@ function is_locked
     string match -r -q 'is active' (cinnamon-screensaver-command -q)
 end
 
-echo "Work time: $work_time sec"
-echo "Short break time: $short_break_time sec"
-echo "Long break time: $long_break_time sec"
-
 while true
-    sleep $work_time
+    set slept 0
+
+    while test $slept -lt $sleep_intervals
+        sleep 60
+
+        if is_locked
+            set slept 0
+        else
+            set slept (math "$slept + 1")
+        end
+
+        echo $slept
+    end
 
     # Outside working hours we don't enforce breaks, as I'm moving around
     # anyway.
