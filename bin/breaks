@@ -1,0 +1,111 @@
+#!/usr/bin/env fish
+
+# The time allowed spent working, in seconds.
+set work_time (math '20 * 60')
+
+# The number of short breaks in an hour, after which a long break should be
+# enforced.
+set short_break_count (math "3600 / $work_time")
+
+# The short break time, in seconds.
+set short_break_time 30
+
+# The long break time, in seconds.
+set long_break_time 300
+
+# The time to wait (in seconds) after sending a notification and enforcing
+# a break.
+set heads_up_time 10
+
+# The number of breaks processed so far.
+set breaks 0
+
+# The title to use for break reminder notifications.
+set notify_title 'Break reminder'
+
+# The message to display when taking a long break.
+set long_break_message 'Get up, drink some water, rotate your shoulders'
+
+# The message to display when taking a short break.
+set short_break_message 'Get up, stretch your legs a bit'
+
+# The path to the script directory
+set project_dir (dirname (dirname (realpath (status --current-filename))))
+
+# The sound to play before starting a break.
+set start_sound "$project_dir/audio/start_break.wav"
+
+# The sound to play after starting a break.
+set stop_sound "$project_dir/audio/stop_break.wav"
+
+echo "Work time: $work_time sec"
+echo "Short break time: $short_break_time sec"
+echo "Long break time: $long_break_time sec"
+
+while true
+    sleep $work_time
+
+    # Outside working hours we don't enforce breaks, as I'm moving around
+    # anyway.
+    set hour (date +'%H')
+
+    if test $hour -ge 18 -o $hour -le 10
+        echo 'Not enforcing a break outside working hours'
+
+        # Reset the breaks counter so that we start from scratch at the start of
+        # the day.
+        set breaks 0
+        continue
+    end
+
+    # If Zoom is running, don't enforce breaks. After Zoom no longer runs, we
+    # force a break.
+    while pgrep ZoomLauncher >/dev/null
+        echo 'Waiting for Zoom to close before enforcing a break'
+        sleep 60
+    end
+
+    # If the screen is already locked, don't enforce a break.
+    if string match -r -q 'is active' (cinnamon-screensaver-command -q)
+        echo 'Screensaver is already active, not enforcing a break'
+        continue
+    end
+
+    # A long break is scheduled every N short breaks, based on the duration of
+    # the short breaks.
+    if test $breaks -gt 0 && test (math "$breaks % $short_break_count") -eq 0
+        set long_break true
+    else
+        set long_break false
+    end
+
+    if test $long_break = true
+        set heads_up_message 'Long break coming up'
+        set lock_message $long_break_message
+        set break_time $long_break_time
+    else
+        set heads_up_message 'Short break coming up'
+        set lock_message $short_break_message
+        set break_time $short_break_time
+    end
+
+    echo $heads_up_message
+
+    notify-send -u normal -i media-playback-pause \
+        "$notify_title" "$heads_up_message"
+
+    # Break starts
+    aplay $start_sound >/dev/null 2>&1
+    sleep $heads_up_time
+    cinnamon-screensaver-command -l -m "$lock_message" >/dev/null 2>&1
+
+    sleep $break_time
+
+    # Break is over
+    cinnamon-screensaver-command -d >/dev/null 2>&1
+    aplay $stop_sound >/dev/null 2>&1
+
+    set breaks (math "$breaks + 1")
+
+    echo 'Break is over, time for work'
+end

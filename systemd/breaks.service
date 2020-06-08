@@ -1,0 +1,10 @@
+[Unit]
+Description=Personal break reminder software
+After=display-manager.service
+
+[Service]
+ExecStart=%h/bin/breaks
+Restart=always
+
+[Install]
+WantedBy=default.target
