@@ -38,6 +38,10 @@ set start_sound "$project_dir/audio/start_break.wav"
 # The sound to play after starting a break.
 set stop_sound "$project_dir/audio/stop_break.wav"
 
+function is_locked
+    string match -r -q 'is active' (cinnamon-screensaver-command -q)
+end
+
 echo "Work time: $work_time sec"
 echo "Short break time: $short_break_time sec"
 echo "Long break time: $long_break_time sec"
@@ -65,9 +69,17 @@ while true
         sleep 60
     end
 
-    # If the screen is already locked, don't enforce a break.
-    if string match -r -q 'is active' (cinnamon-screensaver-command -q)
-        echo 'Screensaver is already active, not enforcing a break'
+    if is_locked
+        echo 'Screensaver is active, waiting for the screen to be unlocked'
+
+        # Wait for the screen to be unlocked, after which we will start a new
+        # work cycle. We don't immediately start a new cycle, as this may result
+        # in a break being enforced a few minutes after unlocking the screen
+        # (depending on how long the screen was locked for).
+        while is_locked
+            sleep 30
+        end
+
         continue
     end
 
