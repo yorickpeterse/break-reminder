@@ -118,6 +118,10 @@ while true
     # Break starts
     aplay $start_sound >/dev/null 2>&1
     sleep $heads_up_time
+
+    # We unlock first so we display the lock message, even when the screen was
+    # already locked.
+    cinnamon-screensaver-command -d >/dev/null 2>&1
     cinnamon-screensaver-command -l -m "$lock_message" >/dev/null 2>&1
 
     sleep $break_time
