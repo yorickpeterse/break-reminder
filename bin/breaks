@@ -42,20 +42,44 @@ set start_sound "$project_dir/audio/start_break.wav"
 set stop_sound "$project_dir/audio/stop_break.wav"
 
 function is_locked
-    string match -r -q 'is active' (cinnamon-screensaver-command -q)
+    set output (cinnamon-screensaver-command -q)
+
+    if test $status -eq 1
+        echo 'Failed to obtain the Cinnamon screensaver status'
+        exit 1
+    end
+
+    string match -r -q 'is active' $output
+end
+
+function timestamp
+    date +%s
 end
 
 while true
     set slept 0
+    set start_ticking (timestamp)
 
     while test $slept -lt $sleep_intervals
         sleep 60
 
         if is_locked
             set slept 0
+            set start_ticking (timestamp)
         else
             set slept (math "$slept + 1")
         end
+    end
+
+    set stop_ticking (timestamp)
+
+    # If the computer is suspended during ticking, we don't want to enforce
+    # a break e.g. 10 minutes after waking up. To handle this, we start ticking
+    # again if it took too long to complete a work cycle.
+    if test (math "$stop_ticking - $start_ticking") -gt (math "$work_time * 2")
+        echo 'The computer was likely suspended, restarting the timer'
+        set breaks 0
+        continue
     end
 
     # Outside working hours we don't enforce breaks, as I'm moving around
@@ -121,13 +145,13 @@ while true
 
     # We unlock first so we display the lock message, even when the screen was
     # already locked.
-    cinnamon-screensaver-command -d >/dev/null 2>&1
-    cinnamon-screensaver-command -l -m "$lock_message" >/dev/null 2>&1
+    cinnamon-screensaver-command -d
+    cinnamon-screensaver-command -l -m "$lock_message"
 
     sleep $break_time
 
     # Break is over
-    cinnamon-screensaver-command -d >/dev/null 2>&1
+    cinnamon-screensaver-command -d
     aplay $stop_sound >/dev/null 2>&1
 
     set breaks (math "$breaks + 1")
