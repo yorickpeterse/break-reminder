@@ -29,8 +29,8 @@ set notify_title 'Break reminder'
 # The message to display when taking a long break.
 set long_break_message 'Get up, drink some water, rotate your shoulders'
 
-# The message to display when taking a short break.
-set short_break_message 'Get up, stretch your legs a bit'
+# The last short break message that was generated.
+set last_short_break_message ''
 
 # The path to the script directory
 set project_dir (dirname (dirname (realpath (status --current-filename))))
@@ -54,6 +54,17 @@ end
 
 function timestamp
     date +%s
+end
+
+function random_short_break_message
+    set message (shuf -n1 "$project_dir/messages/short.txt")
+
+    while test $message = $last_short_break_message
+        set message (shuf -n1 "$project_dir/messages/short.txt")
+    end
+
+    set last_short_break_message $message
+    echo $message
 end
 
 while true
@@ -130,7 +141,7 @@ while true
         set break_time $long_break_time
     else
         set heads_up_message 'Short break coming up'
-        set lock_message $short_break_message
+        set lock_message (random_short_break_message)
         set break_time $short_break_time
     end
 
