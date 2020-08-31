@@ -154,6 +154,18 @@ while true
     aplay $start_sound >/dev/null 2>&1
     sleep $heads_up_time
 
+    # Pause any playing media
+    set playing_media (playerctl metadata -f '{{playerName}} {{status}}' | \
+        rg -o '(\w+) Playing' -r '$1')
+
+    for player in $playing_media
+        # The timeout is needed because of the following bugs:
+        #
+        # * https://github.com/altdesktop/playerctl/issues/187
+        # * https://bugzilla.mozilla.org/show_bug.cgi?id=1648874
+        timeout 0.5 playerctl -p $player pause
+    end
+
     # We unlock first so we display the lock message, even when the screen was
     # already locked.
     cinnamon-screensaver-command -d
@@ -164,6 +176,11 @@ while true
     # Break is over
     cinnamon-screensaver-command -d
     aplay $stop_sound >/dev/null 2>&1
+
+    # Resume any paused media
+    for player in $playing_media
+        timeout 0.5 playerctl -p $player play
+    end
 
     set breaks (math "$breaks + 1")
 
