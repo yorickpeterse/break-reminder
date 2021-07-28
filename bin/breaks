@@ -16,21 +16,11 @@ set short_break_time 30
 # The long break time, in seconds.
 set long_break_time 300
 
-# The time to wait (in seconds) after sending a notification and enforcing
-# a break.
-set heads_up_time 10
-
 # The number of breaks processed so far.
 set breaks 0
 
 # The title to use for break reminder notifications.
 set notify_title 'Break reminder'
-
-# The message to display when taking a long break.
-set long_break_message 'Get up, drink some water, rotate your shoulders'
-
-# The last short break message that was generated.
-set last_short_break_message ''
 
 # The path to the script directory
 set project_dir (dirname (dirname (realpath (status --current-filename))))
@@ -38,13 +28,10 @@ set project_dir (dirname (dirname (realpath (status --current-filename))))
 # The sound to play before starting a break.
 set start_sound "$project_dir/audio/start_break.wav"
 
-# The sound to play after starting a break.
-set stop_sound "$project_dir/audio/stop_break.wav"
-
 function is_locked
-    set output (cinnamon-screensaver-command -q)
+    set output (cinnamon-screensaver-command -q 2>&1)
 
-    if test $status -eq 1
+    if string match -r -q 'Unable to init server' $output
         echo 'Failed to obtain the Cinnamon screensaver status'
         exit 1
     end
@@ -54,17 +41,6 @@ end
 
 function timestamp
     date +%s
-end
-
-function random_short_break_message
-    set message (shuf -n1 "$project_dir/messages/short.txt")
-
-    while test $message = $last_short_break_message
-        set message (shuf -n1 "$project_dir/messages/short.txt")
-    end
-
-    set last_short_break_message $message
-    echo $message
 end
 
 while true
@@ -136,52 +112,20 @@ while true
     end
 
     if test $long_break = true
-        set heads_up_message 'Long break coming up'
-        set lock_message $long_break_message
+        set minutes (math "$long_break_time / 60")
+        set break_message "Take a break for $minutes minutes"
         set break_time $long_break_time
     else
-        set heads_up_message 'Short break coming up'
-        set lock_message (random_short_break_message)
         set break_time $short_break_time
+        set break_message 'Take a 30 second break'
     end
 
-    echo $heads_up_message
-
     notify-send -u normal -i media-playback-pause \
-        "$notify_title" "$heads_up_message"
+        "$notify_title" "$break_message"
 
     # Break starts
     aplay $start_sound >/dev/null 2>&1
-    sleep $heads_up_time
-
-    # Pause any playing media
-    set playing_media (playerctl metadata -f '{{playerName}} {{status}}' | \
-        rg -o '(\w+) Playing' -r '$1')
-
-    for player in $playing_media
-        # The timeout is needed because of the following bugs:
-        #
-        # * https://github.com/altdesktop/playerctl/issues/187
-        # * https://bugzilla.mozilla.org/show_bug.cgi?id=1648874
-        timeout 0.5 playerctl -p $player pause
-    end
-
-    # We unlock first so we display the lock message, even when the screen was
-    # already locked.
-    cinnamon-screensaver-command -d
-    cinnamon-screensaver-command -l -m "$lock_message"
-
     sleep $break_time
-
-    # Break is over
-    cinnamon-screensaver-command -d
-    aplay $stop_sound >/dev/null 2>&1
-
-    # Resume any paused media
-    for player in $playing_media
-        timeout 0.5 playerctl -p $player play
-    end
-
     set breaks (math "$breaks + 1")
 
     echo 'Break is over, time for work'

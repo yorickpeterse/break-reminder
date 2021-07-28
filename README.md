@@ -8,8 +8,6 @@ Personal break reminder software, written in Fish.
 * Cinnamon DE
 * aplay
 * libnotify
-* playerctl
-* ripgrep
 
 # Usage
 
