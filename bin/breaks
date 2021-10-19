@@ -1,10 +1,7 @@
 #!/usr/bin/env fish
 
-# The time allowed spent working, in seconds.
+# The time spent working, in seconds.
 set work_time (math '20 * 60')
-
-# The amount of one minute sleep intervals in a work cycle.
-set sleep_intervals (math "$work_time / 60")
 
 # The number of short breaks in an hour, after which a long break should be
 # enforced.
@@ -44,19 +41,9 @@ function timestamp
 end
 
 while true
-    set slept 0
     set start_ticking (timestamp)
 
-    while test $slept -lt $sleep_intervals
-        sleep 60
-
-        if is_locked
-            set slept 0
-            set start_ticking (timestamp)
-        else
-            set slept (math "$slept + 1")
-        end
-    end
+    sleep $work_time
 
     set stop_ticking (timestamp)
 
@@ -73,7 +60,7 @@ while true
     # anyway.
     set hour (date +'%H')
 
-    if test $hour -ge 18 -o $hour -le 10
+    if test $hour -ge 18 -o $hour -lt 10
         echo 'Not enforcing a break outside working hours'
 
         # Reset the breaks counter so that we start from scratch at the start of
@@ -89,17 +76,10 @@ while true
         sleep 60
     end
 
+    # If the screen is locked, I'm probably not behind my computer, so we
+    # restart the break cycle.
     if is_locked
         echo 'Screensaver is active, waiting for the screen to be unlocked'
-
-        # Wait for the screen to be unlocked, after which we will start a new
-        # work cycle. We don't immediately start a new cycle, as this may result
-        # in a break being enforced a few minutes after unlocking the screen
-        # (depending on how long the screen was locked for).
-        while is_locked
-            sleep 30
-        end
-
         continue
     end
 
