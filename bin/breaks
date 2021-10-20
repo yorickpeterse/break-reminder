@@ -23,7 +23,7 @@ set notify_title 'Break reminder'
 set project_dir (dirname (dirname (realpath (status --current-filename))))
 
 # The sound to play before starting a break.
-set start_sound "$project_dir/audio/start_break.wav"
+set start_sound "$project_dir/audio/start_break.ogg"
 
 function is_locked
     set output (cinnamon-screensaver-command -q 2>&1)
@@ -104,7 +104,7 @@ while true
         "$notify_title" "$break_message"
 
     # Break starts
-    aplay $start_sound >/dev/null 2>&1
+    mpv --really-quiet $start_sound >/dev/null 2>&1
     sleep $break_time
     set breaks (math "$breaks + 1")
 

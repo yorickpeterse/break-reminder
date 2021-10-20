@@ -6,7 +6,7 @@ Personal break reminder software, written in Fish.
 
 * Fish
 * Cinnamon DE
-* aplay
+* mpv
 * libnotify
 
 # Usage
