@@ -26,14 +26,9 @@ set project_dir (dirname (dirname (realpath (status --current-filename))))
 set start_sound "$project_dir/audio/start_break.ogg"
 
 function is_locked
-    set output (cinnamon-screensaver-command -q 2>&1)
+    set output (loginctl show-session -p IdleHint --value 2>&1)
 
-    if string match -r -q 'Unable to init server' $output
-        echo 'Failed to obtain the Cinnamon screensaver status'
-        exit 1
-    end
-
-    string match -r -q 'is active' $output
+    string match -r -q yes $output
 end
 
 function timestamp

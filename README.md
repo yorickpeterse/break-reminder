@@ -5,7 +5,7 @@ Personal break reminder software, written in Fish.
 # Requirements
 
 * Fish
-* Cinnamon DE
+* systemd
 * mpv
 * libnotify
 
