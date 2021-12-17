@@ -95,7 +95,9 @@ while true
         set break_message 'Take a 30 second break'
     end
 
-    notify-send -u normal -i media-playback-pause \
+    notify-send --urgency=normal \
+        --icon=media-playback-pause \
+        --hint=int:transient:1 \
         "$notify_title" "$break_message"
 
     # Break starts
