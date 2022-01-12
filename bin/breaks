@@ -26,9 +26,9 @@ set project_dir (dirname (dirname (realpath (status --current-filename))))
 set start_sound "$project_dir/audio/start_break.ogg"
 
 function is_locked
-    set output (loginctl show-session -p IdleHint --value 2>&1)
+    set output (busctl --user call org.gnome.Shell /org/gnome/ScreenSaver org.gnome.ScreenSaver GetActive)
 
-    string match -r -q yes $output
+    string match -r -q "b true" $output
 end
 
 function timestamp
