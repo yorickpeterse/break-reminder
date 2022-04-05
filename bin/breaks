@@ -51,19 +51,6 @@ while true
         continue
     end
 
-    # Outside working hours we don't enforce breaks, as I'm moving around
-    # anyway.
-    set hour (date +'%H')
-
-    if test $hour -ge 18 -o $hour -lt 10
-        echo 'Not enforcing a break outside working hours'
-
-        # Reset the breaks counter so that we start from scratch at the start of
-        # the day.
-        set breaks 0
-        continue
-    end
-
     # If Zoom is running, don't enforce breaks. After Zoom no longer runs, we
     # force a break.
     while pgrep ZoomLauncher >/dev/null
