@@ -26,7 +26,11 @@ set project_dir (dirname (dirname (realpath (status --current-filename))))
 set start_sound "$project_dir/audio/start_break.ogg"
 
 function is_locked
-    set output (busctl --user call org.gnome.Shell /org/gnome/ScreenSaver org.gnome.ScreenSaver GetActive)
+    if test $DESKTOP_SESSION -eq plasmawayland
+        set output (qdbus org.freedesktop.ScreenSaver /ScreenSaver org.freedesktop.ScreenSaver.GetActive)
+    else
+        set output (busctl --user call org.gnome.Shell /org/gnome/ScreenSaver org.gnome.ScreenSaver GetActive)
+    end
 
     string match -r -q "b true" $output
 end
