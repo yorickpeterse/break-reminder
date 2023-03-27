@@ -26,7 +26,7 @@ set project_dir (dirname (dirname (realpath (status --current-filename))))
 set start_sound "$project_dir/audio/start_break.ogg"
 
 function is_locked
-    if pidof -q /usr/bin/gdm
+    if pidof -q gdm
         set output (busctl --user call org.gnome.Shell /org/gnome/ScreenSaver org.gnome.ScreenSaver GetActive)
     else
         set output (qdbus org.freedesktop.ScreenSaver /ScreenSaver org.freedesktop.ScreenSaver.GetActive)
