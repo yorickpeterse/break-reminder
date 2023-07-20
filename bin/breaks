@@ -92,7 +92,7 @@ while true
         "$notify_title" "$break_message"
 
     # Break starts
-    mpv --really-quiet $start_sound >/dev/null 2>&1
+    ogg123 --quiet $start_sound >/dev/null 2>&1
     sleep $break_time
     set breaks (math "$breaks + 1")
 
