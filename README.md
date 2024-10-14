@@ -6,7 +6,6 @@ Personal break reminder software, written in Fish.
 
 * Fish
 * systemd
-* vorbis-tools for ogg123
 * libnotify
 
 # Usage

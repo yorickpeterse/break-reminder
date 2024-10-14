@@ -89,10 +89,10 @@ while true
     notify-send --urgency=normal \
         --icon=media-playback-pause \
         --hint=int:transient:1 \
+        --hint=string:sound-file:$start_sound \
         "$notify_title" "$break_message"
 
     # Break starts
-    ogg123 --quiet $start_sound >/dev/null 2>&1
     sleep $break_time
     set breaks (math "$breaks + 1")
 
